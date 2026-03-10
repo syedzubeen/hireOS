@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from flask import Flask, request, jsonify, send_file
 import requests
 import json
@@ -18,11 +19,8 @@ def get_google_creds():
     SCOPES = ['https://www.googleapis.com/auth/calendar']
     creds = None
 
-    # Try token.json file first (local dev)
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-
-    # Try environment variable (production/Render/Railway)
     elif os.environ.get('GOOGLE_TOKEN_JSON'):
         import tempfile
         tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
@@ -31,7 +29,6 @@ def get_google_creds():
         creds = Credentials.from_authorized_user_file(tmp.name, SCOPES)
         os.unlink(tmp.name)
 
-    # Refresh if expired
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
 
@@ -53,8 +50,8 @@ def create_meet_event(candidate_name):
         end = start + timedelta(hours=1)
 
         event = {
-			'summary': f'HireOS Interview - {candidate_name}',
-            'description': f'Technical interview for {candidate_name} scheduled via HireOS automated pipeline.',
+            'summary': 'HireOS Interview - ' + candidate_name,
+            'description': 'Technical interview for ' + candidate_name + ' scheduled via HireOS automated pipeline.',
             'start': {'dateTime': start.isoformat() + 'Z', 'timeZone': 'UTC'},
             'end': {'dateTime': end.isoformat() + 'Z', 'timeZone': 'UTC'},
             'attendees': [
@@ -63,7 +60,7 @@ def create_meet_event(candidate_name):
             ],
             'conferenceData': {
                 'createRequest': {
-                    'requestId': f'hireos-{int(datetime.utcnow().timestamp())}',
+                    'requestId': 'hireos-' + str(int(datetime.utcnow().timestamp())),
                     'conferenceSolutionKey': {'type': 'hangoutsMeet'}
                 }
             },
@@ -78,11 +75,11 @@ def create_meet_event(candidate_name):
         ).execute()
 
         meet_link = event.get('hangoutLink', '')
-        print(f'Meeting created: {meet_link}')
+        print('Meeting created: ' + meet_link)
         return meet_link
 
     except Exception as e:
-        print(f'Calendar error: {e}')
+        print('Calendar error: ' + str(e))
         return ''
 
 @app.route('/')
@@ -92,7 +89,7 @@ def index():
 @app.route('/agent/<agent_id>', methods=['POST'])
 def proxy(agent_id):
     data = request.json
-    url = f'https://api.airia.ai/v2/PipelineExecution/{agent_id}'
+    url = 'https://api.airia.ai/v2/PipelineExecution/' + agent_id
     res = requests.post(url, json=data, headers={
         'X-API-KEY': AIRIA_API_KEY,
         'Content-Type': 'application/json'
@@ -101,11 +98,9 @@ def proxy(agent_id):
     try:
         result = res.json()
     except Exception as e:
-        print(f'Failed to parse Airia response: {e}')
-        print(f'Raw response: {res.text[:500]}')
+        print('Failed to parse Airia response: ' + str(e))
         return jsonify({'error': 'Invalid response from Airia'}), 500
 
-    # For Agent 2 — if SHORTLIST, create Google Meet
     try:
         raw = result.get('result', '')
         if raw:
@@ -118,7 +113,7 @@ def proxy(agent_id):
                     parsed['meet_link'] = meet_link
                     result['result'] = json.dumps(parsed)
     except Exception as e:
-        print(f'Meet scheduling error: {e}')
+        print('Meet scheduling error: ' + str(e))
 
     return jsonify(result)
 
