@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HireOS — Intelligent Hiring Pipeline</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #080c10;
+    --bg2: #0e1318;
+    --bg3: #141a22;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5a0;
+    --accent2: #0095ff;
+    --accent3: #ff4d6d;
+    --text: #e8edf2;
+    --muted: #5a6a7a;
+    --card: #0f151c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 500px; height: 500px; background: rgba(0,229,160,0.06); top: -100px; left: -100px; }
+  .orb2 { width: 400px; height: 400px; background: rgba(0,149,255,0.05); bottom: 0; right: 0; }
+
+  /* Header */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    background: rgba(8,12,16,0.8);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .logo span { color: var(--accent); }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .status-bar {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .status-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .status-pill.live { border-color: rgba(0,229,160,0.3); color: var(--accent); }
+
+  /* Main layout */
+  main {
+    position: relative;
+    z-index: 5;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 40px 80px;
+  }
+
+  /* Section header */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,160,0.2), transparent);
+  }
+
+  /* Two column layout */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    main { padding: 20px; }
+    header { padding: 16px 20px; }
+  }
+
+  /* Input fields */
+  .field-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input[type="text"]:focus {
+    border-color: rgba(0,229,160,0.4);
+    box-shadow: 0 0 0 3px rgba(0,229,160,0.06);
+  }
+
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 24px;
+    border-radius: 10px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    margin-top: 16px;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #080c10;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-primary:hover { background: #00ffb3; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(0,229,160,0.2); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .btn-approve {
+    background: var(--accent);
+    color: #080c10;
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  .btn-approve:hover { background: #00ffb3; }
+
+  .btn-deny {
+    background: transparent;
+    color: var(--accent3);
+    border: 1px solid rgba(255,77,109,0.3);
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  .btn-deny:hover { background: rgba(255,77,109,0.1); }
+
+  /* Pipeline steps */
+  .pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid transparent;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .step.active {
+    border-color: rgba(0,229,160,0.2);
+    color: var(--accent);
+    background: rgba(0,229,160,0.04);
+  }
+
+  .step.done {
+    border-color: rgba(0,229,160,0.15);
+    color: var(--text);
+    background: rgba(0,229,160,0.03);
+  }
+
+  .step.error {
+    border-color: rgba(255,77,109,0.2);
+    color: var(--accent3);
+    background: rgba(255,77,109,0.04);
+  }
+
+  .step-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .step.active .step-icon { background: rgba(0,229,160,0.15); animation: pulse 1.5s infinite; }
+  .step.done .step-icon { background: rgba(0,229,160,0.2); }
+  .step.error .step-icon { background: rgba(255,77,109,0.15); }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,160,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(0,229,160,0); }
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(0,229,160,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  /* Result sections */
+  .result-section { margin-top: 24px; }
+
+  /* HITL approval box */
+  .approval-box {
+    background: rgba(0,149,255,0.05);
+    border: 1px solid rgba(0,149,255,0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 16px;
+  }
+
+  .approval-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent2);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .approval-desc {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .approval-actions { display: flex; gap: 10px; }
+
+  /* Job post preview */
+  .job-post-content {
+    display: none; /* hidden until populated */
+  }
+
+  .job-post-card {
+    margin-top: 20px;
+    background: linear-gradient(135deg, rgba(0,229,160,0.04), rgba(0,149,255,0.04));
+    border: 1px solid rgba(0,229,160,0.15);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .job-post-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(0,229,160,0.1);
+    background: rgba(0,229,160,0.05);
+  }
+
+  .job-post-card-header .jp-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .job-post-card-header .jp-badge {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.2);
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.05em;
+  }
+
+  .job-post-body {
+    padding: 18px;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+
+  .job-post-body::-webkit-scrollbar { width: 4px; }
+  .job-post-body::-webkit-scrollbar-track { background: transparent; }
+  .job-post-body::-webkit-scrollbar-thumb { background: rgba(0,229,160,0.2); border-radius: 2px; }
+
+  .job-post-para {
+    font-size: 13px;
+    line-height: 1.85;
+    color: #b0c4d4;
+    margin-bottom: 14px;
+  }
+
+  .job-post-para:last-child { margin-bottom: 0; }
+
+  .job-post-section-title {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .job-post-section-title:first-child { margin-top: 0; }
+
+  /* Skills pills */
+  .skills-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+  .skill-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid;
+  }
+
+  .skill-pill.matched {
+    border-color: rgba(0,229,160,0.3);
+    background: rgba(0,229,160,0.06);
+    color: var(--accent);
+  }
+
+  .skill-pill.missing {
+    border-color: rgba(255,77,109,0.3);
+    background: rgba(255,77,109,0.06);
+    color: var(--accent3);
+  }
+
+  .skill-pill.required {
+    border-color: rgba(0,149,255,0.3);
+    background: rgba(0,149,255,0.06);
+    color: var(--accent2);
+  }
+
+  /* Score donut */
+  .score-container {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-top: 16px;
+  }
+
+  .donut-wrap {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+  }
+
+  .donut-wrap svg { transform: rotate(-90deg); }
+
+  .donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .donut-pct {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .donut-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+
+  /* Decision badge */
+  .decision-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-top: 12px;
+  }
+
+  .decision-badge.shortlist {
+    background: rgba(0,229,160,0.1);
+    border: 1px solid rgba(0,229,160,0.3);
+    color: var(--accent);
+  }
+
+  .decision-badge.reject {
+    background: rgba(255,77,109,0.1);
+    border: 1px solid rgba(255,77,109,0.3);
+    color: var(--accent3);
+  }
+
+  /* Info rows */
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-key { color: var(--muted); font-family: 'DM Mono', monospace; font-size: 11px; }
+  .info-val { color: var(--text); font-weight: 500; }
+
+  /* PDF link */
+  .pdf-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: rgba(0,149,255,0.08);
+    border: 1px solid rgba(0,149,255,0.2);
+    color: var(--accent2);
+    text-decoration: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    margin-top: 12px;
+    transition: all 0.2s;
+  }
+  .pdf-link:hover { background: rgba(0,149,255,0.15); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 40px 0;
+    position: relative;
+  }
+  .divider::after {
+    content: '◆';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--bg);
+    padding: 0 12px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  /* Reason text */
+  .reason-text {
+    font-size: 13px;
+    color: #8090a0;
+    line-height: 1.7;
+    margin-top: 12px;
+    padding: 14px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 8px;
+    border-left: 2px solid var(--border);
+  }
+
+  /* Meet scheduled */
+  .meet-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(0,229,160,0.05);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 10px;
+    margin-top: 12px;
+    font-size: 13px;
+  }
+
+  .meet-icon {
+    width: 36px; height: 36px;
+    background: rgba(0,229,160,0.15);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  /* Email preview */
+  .email-box {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #8090a0;
+    white-space: pre-wrap;
+  }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+
+  /* Fade in */
+  .fade-in {
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Config notice */
+  .config-notice {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .tag-agent1 { background: rgba(0,229,160,0.1); color: var(--accent); border: 1px solid rgba(0,229,160,0.2); }
+  .tag-agent2 { background: rgba(0,149,255,0.1); color: var(--accent2); border: 1px solid rgba(0,149,255,0.2); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<header>
+  <div>
+    <div class="logo">Hire<span>OS</span></div>
+    <div class="logo-sub">Intelligent Hiring Pipeline</div>
+  </div>
+  <div class="status-bar">
+    <div class="status-pill live" id="agent1StatusPill">● AGENT 1 READY</div>
+    <div class="status-pill live" id="agent2StatusPill">● AGENT 2 READY</div>
+  </div>
+</header>
+
+<main>
+
+  <div class="config-notice">
+    <span>⚙</span>
+    <span>Powered by Airia Cloud · Two-agent architecture · <span class="tag tag-agent1">JOB SETUP</span> + <span class="tag tag-agent2">CANDIDATE EVAL</span></span>
+  </div>
+
+  <!-- AGENT 1: JOB SETUP -->
+  <div class="section-label">Agent 01</div>
+  <div class="section-title">Job Setup Pipeline</div>
+  <div class="section-desc">Initialize a new role — extracts requirements from Confluence, generates job post, and creates interview kit.</div>
+
+  <div class="grid-2">
+    <!-- Input card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Configure Role</div>
+        <span class="tag tag-agent1">AGENT 1</span>
+      </div>
+      <label class="field-label">Role Title</label>
+      <input type="text" id="roleInput" placeholder="e.g. Data Scientist" />
+      <button class="btn btn-primary" id="runAgent1Btn" onclick="runAgent1()">
+        <span>⚡</span> Initialize Hiring Pipeline
+      </button>
+
+      <div class="pipeline-steps" id="agent1Steps">
+        <div class="step" id="a1s1"><div class="step-icon">1</div> Connect to Confluence</div>
+        <div class="step" id="a1s2"><div class="step-icon">2</div> Extract job requirements</div>
+        <div class="step" id="a1s3"><div class="step-icon">3</div> Generate job post</div>
+        <div class="step" id="a1s4"><div class="step-icon">👤</div> Awaiting human approval</div>
+        <div class="step" id="a1s5"><div class="step-icon">5</div> Generate interview questions</div>
+        <div class="step" id="a1s6"><div class="step-icon">6</div> Create interview PDF</div>
+      </div>
+    </div>
+
+    <!-- Output card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Job Setup Output</div>
+        <div id="agent1StatusBadge" class="hidden decision-badge shortlist">✓ LIVE</div>
+      </div>
+
+      <div id="agent1Waiting" style="color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center;">
+        Run Agent 1 to see results here
+      </div>
+
+      <!-- HITL Approval -->
+      <div id="hitlBox" class="approval-box hidden">
+        <div class="approval-title">👤 Human Approval Required</div>
+        <div class="approval-desc">The AI has generated a job post from your Confluence data. Review and approve before it goes live.</div>
+        <div id="jobPostPreview" class="job-post-content" style="margin-bottom:16px;"></div>
+        <div class="approval-actions">
+          <button class="btn btn-approve" onclick="approveJobPost()">✓ Approve & Publish</button>
+          <button class="btn btn-deny" onclick="denyJobPost()">✕ Reject</button>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="agent1Results" class="hidden fade-in">
+        <div class="info-row">
+          <span class="info-key">ROLE</span>
+          <span class="info-val" id="r1Role">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">STATUS</span>
+          <span class="info-val" style="color: var(--accent)">● Published</span>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <div class="field-label">Required Skills</div>
+          <div class="skills-container" id="r1Skills"></div>
+        </div>
+
+        <div id="r1JobPostWrap" class="job-post-card" style="display:none;">
+          <div class="job-post-card-header">
+            <span class="jp-title">Job Post</span>
+            <span class="jp-badge">● LIVE</span>
+          </div>
+          <div class="job-post-body" id="r1JobPost"></div>
+        </div>
+
+        <div id="r1PdfLink" class="pdf-link" style="cursor:pointer; display:none; margin-top:16px;" onclick="window.open(this.getAttribute('data-url'), '_blank')">
+          📄 Download Interview Questions PDF
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- AGENT 2: CANDIDATE EVALUATION -->
+  <div class="section-label">Agent 02</div>
+  <div class="section-title">Candidate Evaluation Pipeline</div>
+  <div class="section-desc">Evaluate a candidate against job requirements — parses resume, scores skills, and takes automated action.</div>
+
+  <div class="grid-2">
+    <!-- Input card -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Evaluate Candidate</div>
+        <span class="tag tag-agent2">AGENT 2</span>
+      </div>
+      <label class="field-label">Resume URL (PDF)</label>
+      <input type="text" id="resumeInput" placeholder="https://example.com/resume.pdf" />
+      <button class="btn btn-primary" style="background: var(--accent2); color: #fff;" id="runAgent2Btn" onclick="runAgent2()">
+        <span>🔍</span> Evaluate Candidate
+      </button>
+
+      <div class="pipeline-steps" id="agent2Steps">
+        <div class="step" id="a2s1"><div class="step-icon">1</div> Fetch resume PDF</div>
+        <div class="step" id="a2s2"><div class="step-icon">2</div> Parse candidate profile</div>
+        <div class="step" id="a2s3"><div class="step-icon">3</div> Match against requirements</div>
+        <div class="step" id="a2s4"><div class="step-icon">4</div> Score & decide</div>
+        <div class="step" id="a2s5"><div class="step-icon">5</div> Take automated action</div>
+      </div>
+    </div>
+
+    <!-- Scorecard -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Candidate Scorecard</div>
+        <div id="decisionBadge" class="hidden decision-badge"></div>
+      </div>
+
+      <div id="agent2Waiting" style="color: var(--muted); font-size: 13px; padding: 40px 0; text-align: center;">
+        Run Agent 2 to evaluate a candidate
+      </div>
+
+      <div id="agent2Results" class="hidden fade-in">
+        <div class="info-row">
+          <span class="info-key">CANDIDATE</span>
+          <span class="info-val" id="r2Name">—</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">EMAIL</span>
+          <span class="info-val" id="r2Email">—</span>
+        </div>
+
+        <div class="score-container">
+          <div class="donut-wrap">
+            <svg width="100" height="100" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="10"/>
+              <circle id="donutArc" cx="50" cy="50" r="40" fill="none" stroke="var(--accent)" stroke-width="10"
+                stroke-dasharray="251.2" stroke-dashoffset="251.2" stroke-linecap="round"
+                style="transition: stroke-dashoffset 1s ease, stroke 0.3s;"/>
+            </svg>
+            <div class="donut-center">
+              <div class="donut-pct" id="r2Score">0%</div>
+              <div class="donut-label">MATCH</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:13px; color: var(--muted); margin-bottom: 6px;">Skill Match Analysis</div>
+            <div id="r2Matched" style="font-size:12px; color: var(--accent); margin-bottom:4px;"></div>
+            <div id="r2Missing" style="font-size:12px; color: var(--accent3);"></div>
+          </div>
+        </div>
+
+        <div>
+          <div class="field-label" style="margin-top: 16px;">Matched Skills</div>
+          <div class="skills-container" id="r2MatchedSkills"></div>
+        </div>
+
+        <div>
+          <div class="field-label" style="margin-top: 12px;">Missing Skills</div>
+          <div class="skills-container" id="r2MissingSkills"></div>
+        </div>
+
+        <div class="reason-text" id="r2Reason"></div>
+
+        <!-- Action taken -->
+        <div id="actionShortlist" class="hidden meet-box">
+          <div class="meet-icon">📅</div>
+          <div>
+            <div style="font-weight: 600; color: var(--accent); font-size: 13px;">Interview Scheduled</div>
+            <div style="color: var(--muted); font-size: 12px; margin-top: 2px;">Google Meet invite sent via calendar</div>
+          </div>
+        </div>
+
+        <div id="actionReject" class="hidden" style="margin-top:12px;">
+          <div class="field-label">Rejection Email Drafted</div>
+          <div class="email-box" id="r2Email2"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const AGENT1_URL = '/agent/0db6c833-ba8e-4842-b864-da06a28e37a6';
+  const AGENT2_URL = '/agent/d493f84d-91ad-4805-916d-08ee67232dec';
+
+  // Extract output from Airia response
+  function extractOutput(data) {
+    try {
+      if (data.result) return data.result;
+      if (data.StepsExecutionContext) {
+        const steps = data.StepsExecutionContext;
+        for (const key of Object.keys(steps)) {
+          if (steps[key].StepType === 'OutputStep') {
+            return steps[key].Result.Value;
+          }
+        }
+      }
+    } catch(e) {}
+    return null;
+  }
+
+  // Parse JSON from output value (strips backticks if present)
+  function parseOutput(raw) {
+    if (!raw) return null;
+    try {
+      const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+      return JSON.parse(clean);
+    } catch(e) {
+      return null;
+    }
+  }
+
+  // ── AGENT 1 ──────────────────────────────────────────
+  async function runAgent1() {
+    const role = document.getElementById('roleInput').value.trim();
+    if (!role) { alert('Please enter a role title.'); return; }
+
+    const btn = document.getElementById('runAgent1Btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Running pipeline...';
+
+    // Reset UI
+    document.getElementById('agent1Waiting').classList.remove('hidden');
+    document.getElementById('agent1Waiting').textContent = 'Running pipeline...';
+    document.getElementById('agent1Results').classList.add('hidden');
+    document.getElementById('agent1StatusBadge').classList.add('hidden');
+
+    const stepIds = ['a1s1','a1s2','a1s3','a1s4','a1s5','a1s6'];
+    stepIds.forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'step';
+      el.querySelector('.step-icon').textContent = id.replace('a1s','');
+    });
+
+    let stepIdx = 0;
+    const stepInterval = setInterval(() => {
+      if (stepIdx > 0) {
+        const prev = document.getElementById('a1s' + stepIdx);
+        if (prev) { prev.className = 'step done'; prev.querySelector('.step-icon').textContent = '✓'; }
+      }
+      stepIdx++;
+      if (stepIdx <= stepIds.length) {
+        const cur = document.getElementById('a1s' + stepIdx);
+        if (cur) {
+          cur.className = 'step active';
+          cur.querySelector('.step-icon').innerHTML = '<div class="spinner"></div>';
+        }
+      } else {
+        clearInterval(stepInterval);
+      }
+    }, 3000);
+
+    try {
+      const res = await fetch(AGENT1_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInput: role, asyncOutput: false })
+      });
+
+      clearInterval(stepInterval);
+      stepIds.forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'step done';
+        el.querySelector('.step-icon').textContent = '✓';
+      });
+
+      const data = await res.json();
+      const raw = extractOutput(data);
+      const parsed = parseOutput(raw);
+
+      document.getElementById('agent1Waiting').classList.add('hidden');
+
+      if (!parsed) {
+        document.getElementById('agent1Waiting').textContent = 'Error: could not parse response. Raw: ' + raw;
+        document.getElementById('agent1Waiting').classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<span>⚡</span> Initialize Hiring Pipeline';
+        return;
+      }
+
+      // Render results
+      document.getElementById('r1Role').textContent = parsed.role || role;
+
+      // Skills — handle both array and comma-separated string
+      const skillsEl = document.getElementById('r1Skills');
+      skillsEl.innerHTML = '';
+      let skills = [];
+      if (parsed.required_skills) {
+        if (Array.isArray(parsed.required_skills)) {
+          skills = parsed.required_skills;
+        } else {
+          skills = parsed.required_skills.split(',').map(s => s.trim()).filter(Boolean);
+        }
+      }
+      skills.forEach(s => {
+        const pill = document.createElement('span');
+        pill.className = 'skill-pill required';
+        pill.textContent = s;
+        skillsEl.appendChild(pill);
+      });
+
+      // Job post — render with paragraph formatting
+      const jpEl = document.getElementById('r1JobPost');
+      const jpWrap = document.getElementById('r1JobPostWrap');
+      if (jpEl && parsed.job_post) {
+        jpEl.innerHTML = '';
+        // Split on double newline or bullet markers for sections
+        const text = parsed.job_post;
+        const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
+        if (paragraphs.length <= 1) {
+          // Single blob — split into sentences and group into readable chunks
+          const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+          const chunkSize = Math.ceil(sentences.length / 3);
+          for (let i = 0; i < sentences.length; i += chunkSize) {
+            const chunk = sentences.slice(i, i + chunkSize).join(' ').trim();
+            if (chunk) {
+              const p = document.createElement('p');
+              p.className = 'job-post-para';
+              p.textContent = chunk;
+              jpEl.appendChild(p);
+            }
+          }
+        } else {
+          paragraphs.forEach(para => {
+            const trimmed = para.trim();
+            // Check if it looks like a section header (short, ends with colon or all caps)
+            if (trimmed.length < 50 && (trimmed.endsWith(':') || trimmed === trimmed.toUpperCase())) {
+              const h = document.createElement('div');
+              h.className = 'job-post-section-title';
+              h.textContent = trimmed.replace(/:$/, '');
+              jpEl.appendChild(h);
+            } else {
+              const p = document.createElement('p');
+              p.className = 'job-post-para';
+              p.textContent = trimmed;
+              jpEl.appendChild(p);
+            }
+          });
+        }
+        jpWrap.style.display = 'block';
+      }
+
+      // PDF link
+      const pdfLink = document.getElementById('r1PdfLink');
+      const pdfUrl = parsed.interview_questions_pdf_url || '';
+      if (pdfUrl.startsWith('http')) {
+        pdfLink.setAttribute('data-url', pdfUrl);
+        pdfLink.style.display = 'block';
+      }
+
+      document.getElementById('agent1StatusBadge').classList.remove('hidden');
+      document.getElementById('agent1Results').classList.remove('hidden');
+
+    } catch (err) {
+      clearInterval(stepInterval);
+      stepIds.forEach(id => document.getElementById(id).className = 'step error');
+      document.getElementById('agent1Waiting').textContent = 'Error: ' + err.message;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>⚡</span> Initialize Hiring Pipeline';
+  }
+
+  // ── AGENT 2 ──────────────────────────────────────────
+  async function runAgent2() {
+    const url = document.getElementById('resumeInput').value.trim();
+    if (!url) { alert('Please enter a resume URL.'); return; }
+
+    const btn = document.getElementById('runAgent2Btn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Evaluating...';
+
+    document.getElementById('agent2Waiting').classList.remove('hidden');
+    document.getElementById('agent2Waiting').textContent = 'Evaluating candidate...';
+    document.getElementById('agent2Results').classList.add('hidden');
+    document.getElementById('decisionBadge').classList.add('hidden');
+    document.getElementById('actionShortlist').classList.add('hidden');
+    document.getElementById('actionReject').classList.add('hidden');
+    document.getElementById('donutArc').style.strokeDashoffset = '251.2';
+    document.getElementById('r2Score').textContent = '0%';
+
+    const stepIds = ['a2s1','a2s2','a2s3','a2s4','a2s5'];
+    stepIds.forEach(id => {
+      const el = document.getElementById(id);
+      el.className = 'step';
+      el.querySelector('.step-icon').textContent = id.replace('a2s','');
+    });
+
+    let stepIdx = 0;
+    const stepInterval = setInterval(() => {
+      if (stepIdx > 0) {
+        const prev = document.getElementById('a2s' + stepIdx);
+        if (prev) { prev.className = 'step done'; prev.querySelector('.step-icon').textContent = '✓'; }
+      }
+      stepIdx++;
+      if (stepIdx <= stepIds.length) {
+        const cur = document.getElementById('a2s' + stepIdx);
+        if (cur) {
+          cur.className = 'step active';
+          cur.querySelector('.step-icon').innerHTML = '<div class="spinner"></div>';
+        }
+      } else {
+        clearInterval(stepInterval);
+      }
+    }, 4000);
+
+    try {
+      const res = await fetch(AGENT2_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userInput: url, asyncOutput: false })
+      });
+
+      clearInterval(stepInterval);
+      stepIds.forEach(id => {
+        const el = document.getElementById(id);
+        el.className = 'step done';
+        el.querySelector('.step-icon').textContent = '✓';
+      });
+
+      const data = await res.json();
+      const raw = extractOutput(data);
+      const parsed = parseOutput(raw);
+
+      document.getElementById('agent2Waiting').classList.add('hidden');
+
+      if (!parsed) {
+        document.getElementById('agent2Waiting').textContent = 'Error: could not parse response. Raw: ' + raw;
+        document.getElementById('agent2Waiting').classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<span>🔍</span> Evaluate Candidate';
+        return;
+      }
+
+      // Name & email
+      document.getElementById('r2Name').textContent = parsed.candidate_name || '—';
+      document.getElementById('r2Email').textContent = parsed.candidate_email || '—';
+
+      // Score donut
+      const pct = Math.round(parsed.match_percentage || 0);
+      document.getElementById('r2Score').textContent = pct + '%';
+      const circumference = 251.2;
+      const offset = circumference - (pct / 100) * circumference;
+      const arc = document.getElementById('donutArc');
+      arc.style.strokeDashoffset = offset;
+      arc.style.stroke = pct >= 50 ? 'var(--accent)' : 'var(--accent3)';
+
+      // Counts
+      const matched = parsed.matched_skills || [];
+      const missing = parsed.missing_skills || [];
+      document.getElementById('r2Matched').textContent = '✓ ' + matched.length + ' skills matched';
+      document.getElementById('r2Missing').textContent = '✕ ' + missing.length + ' skills missing';
+
+      // Skill pills
+      const matchEl = document.getElementById('r2MatchedSkills');
+      matchEl.innerHTML = '';
+      matched.forEach(s => {
+        const p = document.createElement('span');
+        p.className = 'skill-pill matched';
+        p.textContent = s;
+        matchEl.appendChild(p);
+      });
+
+      const missEl = document.getElementById('r2MissingSkills');
+      missEl.innerHTML = '';
+      missing.forEach(s => {
+        const p = document.createElement('span');
+        p.className = 'skill-pill missing';
+        p.textContent = s;
+        missEl.appendChild(p);
+      });
+
+      // Reason
+      document.getElementById('r2Reason').textContent = parsed.reason || '';
+
+      // Decision
+      const badge = document.getElementById('decisionBadge');
+      badge.classList.remove('hidden');
+      if (parsed.decision === 'SHORTLIST') {
+        badge.className = 'decision-badge shortlist';
+        badge.textContent = '✓ SHORTLIST';
+        document.getElementById('actionShortlist').classList.remove('hidden');
+      } else {
+        badge.className = 'decision-badge reject';
+        badge.textContent = '✕ REJECT';
+        document.getElementById('actionReject').classList.remove('hidden');
+        const emailBody = parsed.rejection_email?.body || parsed.body || '';
+        document.getElementById('r2Email2').textContent = emailBody;
+      }
+
+      document.getElementById('agent2Results').classList.remove('hidden');
+
+    } catch (err) {
+      clearInterval(stepInterval);
+      stepIds.forEach(id => document.getElementById(id).className = 'step error');
+      document.getElementById('agent2Waiting').textContent = 'Error: ' + err.message;
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<span>🔍</span> Evaluate Candidate';
+  }
+</script>
+</body>
+</html>
