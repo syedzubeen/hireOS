@@ -53,7 +53,7 @@ def create_meet_event(candidate_name):
         end = start + timedelta(hours=1)
 
         event = {
-            'summary': f'HireOS Interview — {candidate_name}',
+			'summary': f'HireOS Interview - {candidate_name}',
             'description': f'Technical interview for {candidate_name} scheduled via HireOS automated pipeline.',
             'start': {'dateTime': start.isoformat() + 'Z', 'timeZone': 'UTC'},
             'end': {'dateTime': end.isoformat() + 'Z', 'timeZone': 'UTC'},
