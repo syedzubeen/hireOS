@@ -132,4 +132,3 @@ hireos/
 ## Hackathon
 
 Built for the **Airia Hackathon — Track 2: Active Agents**
-Deadline: March 20, 2026
