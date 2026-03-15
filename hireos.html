@@ -814,7 +814,7 @@
         </div>
         <div class="info-row">
           <span class="info-key">EMAIL</span>
-          <span class="info-val" id="r2Email">—</span>
+          <span class="info-val" id="r2EmailDisplay">—</span>
         </div>
 
         <div class="score-container">
@@ -892,9 +892,17 @@
   function parseOutput(raw) {
     if (!raw) return null;
     try {
-      const clean = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+      // Strip all variations of backtick fencing
+      let clean = raw.trim();
+      clean = clean.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
       return JSON.parse(clean);
     } catch(e) {
+      // Try extracting JSON object directly from the string
+      try {
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) return JSON.parse(match[0]);
+      } catch(e2) {}
+      console.error('parseOutput failed:', e, 'raw:', raw);
       return null;
     }
   }
@@ -1108,8 +1116,11 @@
       });
 
       const data = await res.json();
+      console.log('data.result type:', typeof data.result, 'value:', JSON.stringify(data.result).substring(0, 200));
       const raw = extractOutput(data);
+      console.log('raw:', typeof raw, String(raw).substring(0, 200));
       const parsed = parseOutput(raw);
+      console.log('parsed:', parsed);
 
       document.getElementById('agent2Waiting').classList.add('hidden');
 
@@ -1123,7 +1134,7 @@
 
       // Name & email
       document.getElementById('r2Name').textContent = parsed.candidate_name || '—';
-      document.getElementById('r2Email').textContent = parsed.candidate_email || '—';
+      document.getElementById('r2EmailDisplay').textContent = parsed.candidate_email || '—';
 
       // Score donut
       const pct = Math.round(parsed.match_percentage || 0);
@@ -1173,7 +1184,9 @@
         badge.className = 'decision-badge reject';
         badge.textContent = '✕ REJECT';
         document.getElementById('actionReject').classList.remove('hidden');
-        const emailBody = parsed.rejection_email?.body || parsed.body || '';
+        const emailBody = typeof parsed.rejection_email === 'string'
+          ? parsed.rejection_email
+          : (parsed.rejection_email?.body || parsed.body || '');
         document.getElementById('r2Email2').textContent = emailBody;
       }
 
